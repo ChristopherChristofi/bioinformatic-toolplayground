@@ -1,5 +1,5 @@
 import sys, functools
-from typing import Optional, Dict, Callable, MutableMapping, Iterable, List, Tuple, Any
+from typing import Optional, Callable, MutableMapping, Iterable, List, Tuple, Any
 
 bases: List[str] = ["A","C","G","T"]
 build: MutableMapping[str, str] = {}
@@ -24,7 +24,8 @@ def validate(val: Any) -> Any:
     ''' validates input string only contains true DNA bases '''
     @functools.wraps(val)
     def val_inner(*args: Tuple[str]) -> int:
-        for base in args[0].upper():
+        input_strand = set(args[0].upper())
+        for base in input_strand:
             if base not in bases:
                 print(f'Error. Incorrect base: {base}', file=sys.stderr)
                 return 1
@@ -45,6 +46,6 @@ def run(strand: Iterable[str]) -> int:
     return 0
 
 if __name__ == '__main__':
-    strand = 'ACGTTgca'
+    strand = 'ACGTTgcav'
 
     exit(run(strand))
