@@ -1,5 +1,5 @@
-import sys, functools
-from typing import Optional, Callable, MutableMapping, Iterable, List, Tuple, Any
+import sys, functools, argparse
+from typing import Optional, Callable, MutableMapping, Iterable, List, Tuple, Any, Sequence
 
 bases: List[str] = ["A","C","G","T"]
 build: MutableMapping[str, str] = {}
@@ -10,7 +10,7 @@ class Handler:
         self.func = func
 
     @classmethod
-    def baseExchange(cls, base: str, info: str, func: Callable[[], str]) -> int:
+    def base_exchange(cls, base: str, info: str, func: Callable[[], str]) -> int:
         ''' compiles complement base exchange options '''
         build[base] = Handler(info, func)
         return 0
@@ -24,7 +24,7 @@ def validate(val: Any) -> Any:
     ''' validates input string only contains true DNA bases '''
     @functools.wraps(val)
     def val_inner(*args: Tuple[str]) -> int:
-        input_strand = set(args[0].upper())
+        input_strand = set(args[0])
         for base in input_strand:
             if base not in bases:
                 print(f'Error. Incorrect base: {base}', file=sys.stderr)
@@ -32,20 +32,30 @@ def validate(val: Any) -> Any:
         return val(*args)
     return val_inner
 
-Handler.baseExchange("A", "Adenine to Thymine", lambda: "T")
-Handler.baseExchange("C", "Cytosine to Guanine", lambda: "G")
-Handler.baseExchange("G", "Guanine to Cytosine", lambda: "C")
-Handler.baseExchange("T", "Thymine to Adenine", lambda: "A")
+Handler.base_exchange("A", "Adenine to Thymine", lambda: "T")
+Handler.base_exchange("C", "Cytosine to Guanine", lambda: "G")
+Handler.base_exchange("G", "Guanine to Cytosine", lambda: "C")
+Handler.base_exchange("T", "Thymine to Adenine", lambda: "A")
 
 @validate
-def run(strand: Iterable[str]) -> int:
+def generate_complement(strand: Iterable[str]) -> str:
     '''
     Generates DNA complement strand through pattern matching and strand array reversal.
     '''
-    print(''.join([Handler.complement_transform(c) for c in strand.upper()][::-1]))
+    complement = ''.join([Handler.complement_transform(c) for c in strand][::-1])
+    return complement
+
+def run(strand: Optional[Sequence[str]] = None) -> int:
+    '''
+    main init function function processing standard input stream
+    '''
+    if sys.stdin.isatty():
+        print(f'Error.', file=sys.stderr)
+        return 1
+    strand = sys.stdin.read()
+
+    print(generate_complement(strand.rstrip().upper()))
     return 0
 
 if __name__ == '__main__':
-    strand = 'ACGTTgcav'
-
-    exit(run(strand))
+    exit(run())
